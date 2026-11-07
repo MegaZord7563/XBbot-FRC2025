@@ -79,5 +79,12 @@ public final class LiftConstants {
   public static final double SIM_MAX_HEIGHT_METERS = LEVEL3_HARDLIMIT_TOP;
   public static final double SIM_STARTING_HEIGHT_METERS = 0.0;
 
+  public static final double STATOR_CURRENT_LIMIT_AMPS = 60.0;
+  public static final double SUPPLY_CURRENT_LIMIT_AMPS = 40.0;
+
+  public static final double MM_CRUISE_VELOCITY_RPS = 100.0;
+  public static final double MM_ACCELERATION_RPS2 = 600.0;
+  public static final double MM_JERK_RPS3 = 4000.0;
+
   private LiftConstants() {}
 }

@@ -29,6 +29,8 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
+
+import br.com.megazord7563.Constants;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
@@ -44,15 +46,6 @@ import edu.wpi.first.wpilibj.simulation.ElevatorSim;
  * built-in simulation support through a WPILib {@link ElevatorSim}.
  */
 public class LiftIOTalonFX implements LiftIO {
-  private static final double STATOR_CURRENT_LIMIT_AMPS = 60.0;
-  private static final double SUPPLY_CURRENT_LIMIT_AMPS = 40.0;
-
-  private static final double MM_CRUISE_VELOCITY_RPS = 100.0;
-  private static final double MM_ACCELERATION_RPS2 = 600.0;
-  private static final double MM_JERK_RPS3 = 4000.0;
-
-  private static final double LOOP_PERIOD_SECONDS = 0.02;
-
   private final TalonFX leaderMotor;
   private final TalonFX followerMotor;
   private final TalonFXSimState leaderSim;
@@ -120,15 +113,15 @@ public class LiftIOTalonFX implements LiftIO {
             .withNeutralMode(NeutralModeValue.Brake));
     leaderConfig.withCurrentLimits(
         new CurrentLimitsConfigs()
-            .withStatorCurrentLimit(STATOR_CURRENT_LIMIT_AMPS)
+            .withStatorCurrentLimit(LiftConstants.STATOR_CURRENT_LIMIT_AMPS)
             .withStatorCurrentLimitEnable(true)
-            .withSupplyCurrentLimit(SUPPLY_CURRENT_LIMIT_AMPS)
+            .withSupplyCurrentLimit(LiftConstants.SUPPLY_CURRENT_LIMIT_AMPS)
             .withSupplyCurrentLimitEnable(true));
 
     MotionMagicConfigs mm = new MotionMagicConfigs();
-    mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(MM_CRUISE_VELOCITY_RPS))
-        .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(MM_ACCELERATION_RPS2))
-        .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(MM_JERK_RPS3));
+    mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(LiftConstants.MM_CRUISE_VELOCITY_RPS))
+        .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(LiftConstants.MM_ACCELERATION_RPS2))
+        .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(LiftConstants.MM_JERK_RPS3));
     leaderConfig.MotionMagic = mm;
 
     tryUntilOk(5, () -> leaderMotor.getConfigurator().apply(leaderConfig, 0.25));
@@ -140,9 +133,9 @@ public class LiftIOTalonFX implements LiftIO {
             .withNeutralMode(NeutralModeValue.Brake));
     followerConfig.withCurrentLimits(
         new CurrentLimitsConfigs()
-            .withStatorCurrentLimit(STATOR_CURRENT_LIMIT_AMPS)
+            .withStatorCurrentLimit(LiftConstants.STATOR_CURRENT_LIMIT_AMPS)
             .withStatorCurrentLimitEnable(true)
-            .withSupplyCurrentLimit(SUPPLY_CURRENT_LIMIT_AMPS)
+            .withSupplyCurrentLimit(LiftConstants.SUPPLY_CURRENT_LIMIT_AMPS)
             .withSupplyCurrentLimitEnable(true));
 
     tryUntilOk(5, () -> followerMotor.getConfigurator().apply(followerConfig, 0.25));
@@ -194,7 +187,7 @@ public class LiftIOTalonFX implements LiftIO {
     followerSim.setSupplyVoltage(batteryVolts);
 
     elevatorMotorSim.setInput(leaderSim.getMotorVoltage());
-    elevatorMotorSim.update(LOOP_PERIOD_SECONDS);
+    elevatorMotorSim.update(Constants.periodicLoopPeriod);
 
     double radius = LiftConstants.PULLEY_RADIUS_METERS;
     double relativeHeightMeters =
