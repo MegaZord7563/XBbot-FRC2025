@@ -138,7 +138,10 @@ public class LiftIOTalonFX implements LiftIO {
   private void enforceFollowerMode() {
     if (hardwareConfigured) {
       followerMotor.setControl(
-          new Follower(leaderMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+          new Follower(leaderMotor.getDeviceID(), 
+          LiftConstants.FOLLOWER_OPPOSES_LEADER 
+            ? MotorAlignmentValue.Opposed 
+            : MotorAlignmentValue.Aligned));
     }
   }
 
@@ -177,7 +180,7 @@ public class LiftIOTalonFX implements LiftIO {
   public void setPosition(double positionRad, boolean useMotionMagic) {
     if (hardwareConfigured) {
       if (useMotionMagic) {
-        leaderMotor.setControl(positionRequest.withPosition(Units.radiansToRotations(positionRad)));
+        leaderMotor.setControl(motionRequest.withPosition(Units.radiansToRotations(positionRad)));
       } else {
         leaderMotor.setControl(positionRequest.withPosition(Units.radiansToRotations(positionRad)));
       }

@@ -33,7 +33,7 @@ public final class LiftConstants {
   public static final double MAX_VOLTAGE = 12.0;
 
   public static final class FeedBackController {
-    public static final double kP = 3;
+    public static final double kP = 15;
     public static final double kI = 0.0;
     public static final double kD = 0.0;
 
@@ -54,7 +54,7 @@ public final class LiftConstants {
       public static final double kS = 0.25;
       public static final double kV = 0.002;
       public static final double kA = 0.01;
-      public static final double kG = 0.0;
+      public static final double kG = 0.3;
     }
   }
 

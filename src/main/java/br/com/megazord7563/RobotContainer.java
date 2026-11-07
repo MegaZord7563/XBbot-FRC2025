@@ -137,27 +137,29 @@ public class RobotContainer {
     // Switch to X pattern when X button is pressed
     // controller.x().onTrue(Commands.runOnce(driveSubsystem::stopWithX, driveSubsystem));
 
+    // POSITION PID NORMAL 
     controller
         .y()
         .and(controller.leftBumper())
-        .whileTrue(lift.setPositionMettersCommand(1.50, true));
+        .whileTrue(lift.setPositionMettersCommand(1.54, false));
     controller
         .b()
         .and(controller.leftBumper())
-        .whileTrue(lift.setPositionMettersCommand(0.98, true));
+        .whileTrue(lift.setPositionMettersCommand(0.98, false));
     controller
         .x()
         .and(controller.leftBumper())
-        .whileTrue(lift.setPositionMettersCommand(0.40, true));
+        .whileTrue(lift.setPositionMettersCommand(0.40, false));
     controller
         .a()
         .and(controller.leftBumper())
-        .whileTrue(lift.setPositionMettersCommand(0.0, true));
+        .whileTrue(lift.setPositionMettersCommand(0.0, false));
 
+    /** USE MOTION MAGIC */
     controller
         .y()
         .and(controller.rightBumper())
-        .whileTrue(lift.setPositionMettersCommand(1.50, true));
+        .whileTrue(lift.setPositionMettersCommand(1.54, true));
     controller
         .b()
         .and(controller.rightBumper())
