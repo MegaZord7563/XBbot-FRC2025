@@ -9,6 +9,7 @@ package br.com.megazord7563.subsystems.lift;
 import static br.com.megazord7563.util.PhoenixUtil.*;
 import static edu.wpi.first.units.Units.*;
 
+import br.com.megazord7563.Constants;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
@@ -29,8 +30,6 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
-
-import br.com.megazord7563.Constants;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
@@ -120,8 +119,10 @@ public class LiftIOTalonFX implements LiftIO {
 
     MotionMagicConfigs mm = new MotionMagicConfigs();
     mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(LiftConstants.MM_CRUISE_VELOCITY_RPS))
-        .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(LiftConstants.MM_ACCELERATION_RPS2))
-        .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(LiftConstants.MM_JERK_RPS3));
+        .withMotionMagicAcceleration(
+            RotationsPerSecondPerSecond.of(LiftConstants.MM_ACCELERATION_RPS2))
+        .withMotionMagicJerk(
+            RotationsPerSecondPerSecond.per(Second).of(LiftConstants.MM_JERK_RPS3));
     leaderConfig.MotionMagic = mm;
 
     tryUntilOk(5, () -> leaderMotor.getConfigurator().apply(leaderConfig, 0.25));
