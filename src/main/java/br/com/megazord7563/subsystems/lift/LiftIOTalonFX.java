@@ -58,7 +58,7 @@ public class LiftIOTalonFX implements LiftIO {
           LiftConstants.PULLEY_RADIUS_METERS,
           LiftConstants.SIM_MIN_HEIGHT_METERS,
           LiftConstants.SIM_MAX_HEIGHT_METERS,
-          true, // simulate gravity
+          false, // simulate gravity
           LiftConstants.SIM_STARTING_HEIGHT_METERS);
 
   private final PositionVoltage positionRequest = new PositionVoltage(0.0).withSlot(0);

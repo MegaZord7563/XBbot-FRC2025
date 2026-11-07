@@ -73,7 +73,7 @@ public final class LiftConstants {
   public static final double SOFTLIMIT_TOP = 800.0;
   public static final double SOFTLIMIT_BACK = 0.0;
 
-  public static final double LIFT_CARRIAGE_MASS_KG = 8;
+  public static final double LIFT_CARRIAGE_MASS_KG = 11;
 
   public static final double SIM_MIN_HEIGHT_METERS = 0.0;
   public static final double SIM_MAX_HEIGHT_METERS = LEVEL3_HARDLIMIT_TOP;
