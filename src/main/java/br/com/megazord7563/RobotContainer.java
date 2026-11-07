@@ -16,7 +16,6 @@ import br.com.megazord7563.subsystems.drive.ModuleIOSim;
 import br.com.megazord7563.subsystems.drive.ModuleIOTalonFX;
 import br.com.megazord7563.subsystems.lift.Lift;
 import br.com.megazord7563.subsystems.lift.LiftIO;
-import br.com.megazord7563.subsystems.lift.LiftIOSim;
 import br.com.megazord7563.subsystems.lift.LiftIOTalonFX;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -69,7 +68,7 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
-        lift = new Lift(new LiftIOSim());
+        lift = new Lift(new LiftIOTalonFX());
         break;
 
       default:
@@ -121,12 +120,12 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     // Default command, normal field-relative drive
-    // driveSubsystem.setDefaultCommand(
-    //    DriveCommands.joystickDrive(
-    //        driveSubsystem,
-    //        () -> -controller.getLeftY(),
-    //        () -> -controller.getLeftX(),
-    //        () -> -controller.getRightX()));
+    driveSubsystem.setDefaultCommand(
+        DriveCommands.joystickDrive(
+            driveSubsystem,
+            () -> -controller.getLeftY(),
+            () -> -controller.getLeftX(),
+            () -> -controller.getRightX()));
 
     // Lock to 0° when A button is held
     /**
@@ -137,7 +136,7 @@ public class RobotContainer {
     // Switch to X pattern when X button is pressed
     // controller.x().onTrue(Commands.runOnce(driveSubsystem::stopWithX, driveSubsystem));
 
-    // POSITION PID NORMAL 
+    // POSITION PID NORMAL
     controller
         .y()
         .and(controller.leftBumper())

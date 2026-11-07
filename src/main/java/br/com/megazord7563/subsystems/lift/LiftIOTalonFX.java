@@ -11,6 +11,7 @@ import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -26,23 +27,54 @@ import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.sim.ChassisReference;
+import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 
-/** Hardware IO implementation for the Lift subsystem using two CTRE Talon FX controllers. */
+/**
+ * Hardware IO implementation for the Lift subsystem using two CTRE Talon FX controllers, with
+ * built-in simulation support through a WPILib {@link ElevatorSim}.
+ */
 public class LiftIOTalonFX implements LiftIO {
+  private static final double STATOR_CURRENT_LIMIT_AMPS = 60.0;
+  private static final double SUPPLY_CURRENT_LIMIT_AMPS = 40.0;
+
+  private static final double MM_CRUISE_VELOCITY_RPS = 100.0;
+  private static final double MM_ACCELERATION_RPS2 = 600.0;
+  private static final double MM_JERK_RPS3 = 4000.0;
+
+  private static final double LOOP_PERIOD_SECONDS = 0.02;
+
   private final TalonFX leaderMotor;
   private final TalonFX followerMotor;
+  private final TalonFXSimState leaderSim;
+  private final TalonFXSimState followerSim;
 
-  private final PositionVoltage positionRequest = new PositionVoltage(0.0);
+  private final ElevatorSim elevatorMotorSim =
+      new ElevatorSim(
+          LiftConstants.DC_MOTOR,
+          LiftConstants.MOTOR_GEAR_RATIO,
+          LiftConstants.LIFT_CARRIAGE_MASS_KG,
+          LiftConstants.PULLEY_RADIUS_METERS,
+          LiftConstants.SIM_MIN_HEIGHT_METERS,
+          LiftConstants.SIM_MAX_HEIGHT_METERS,
+          true, // simulate gravity
+          LiftConstants.SIM_STARTING_HEIGHT_METERS);
+
+  private final PositionVoltage positionRequest = new PositionVoltage(0.0).withSlot(0);
+  private final MotionMagicVoltage motionRequest = new MotionMagicVoltage(0.0).withSlot(0);
   private final VoltageOut voltageRequest = new VoltageOut(0.0);
-  private final NeutralOut brakeRequest = new NeutralOut();
+  private final NeutralOut neutralRequest = new NeutralOut();
   private final CoastOut coastRequest = new CoastOut();
-  private final MotionMagicVoltage motionRequest = new MotionMagicVoltage(0.0);
+  private final Follower followerRequest;
 
   private final StatusSignal<Angle> leaderPosition;
   private final StatusSignal<AngularVelocity> leaderVelocity;
@@ -59,14 +91,12 @@ public class LiftIOTalonFX implements LiftIO {
   private final Debouncer followerConnectedDebounce =
       new Debouncer(0.5, Debouncer.DebounceType.kFalling);
 
-  private final boolean hardwareConfigured;
+  private boolean wasFollowerConnected = true;
+  private NeutralModeValue currentNeutralMode = NeutralModeValue.Brake;
 
   public LiftIOTalonFX() {
     leaderMotor = new TalonFX(LiftConstants.LEADER_MOTOR_ID, LiftConstants.CAN_BUS);
     followerMotor = new TalonFX(LiftConstants.FOLLOWER_MOTOR_ID, LiftConstants.CAN_BUS);
-
-    followerMotor.getConfigurator().apply(new TalonFXConfiguration());
-    leaderMotor.getConfigurator().apply(new TalonFXConfiguration());
 
     var leaderConfig = new TalonFXConfiguration();
     leaderConfig.Voltage.PeakForwardVoltage = LiftConstants.MAX_VOLTAGE;
@@ -87,23 +117,33 @@ public class LiftIOTalonFX implements LiftIO {
     leaderConfig.withMotorOutput(
         new MotorOutputConfigs()
             .withInverted(InvertedValue.CounterClockwise_Positive)
-            .withNeutralMode(NeutralModeValue.Coast));
+            .withNeutralMode(NeutralModeValue.Brake));
+    leaderConfig.withCurrentLimits(
+        new CurrentLimitsConfigs()
+            .withStatorCurrentLimit(STATOR_CURRENT_LIMIT_AMPS)
+            .withStatorCurrentLimitEnable(true)
+            .withSupplyCurrentLimit(SUPPLY_CURRENT_LIMIT_AMPS)
+            .withSupplyCurrentLimitEnable(true));
 
     MotionMagicConfigs mm = new MotionMagicConfigs();
-    mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(100))
-        .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(600))
-        .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(4000));
+    mm.withMotionMagicCruiseVelocity(RotationsPerSecond.of(MM_CRUISE_VELOCITY_RPS))
+        .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(MM_ACCELERATION_RPS2))
+        .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(MM_JERK_RPS3));
+    leaderConfig.MotionMagic = mm;
 
     tryUntilOk(5, () -> leaderMotor.getConfigurator().apply(leaderConfig, 0.25));
 
     var followerConfig = new TalonFXConfiguration();
-    followerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    followerConfig.Voltage.PeakForwardVoltage = LiftConstants.MAX_VOLTAGE;
-    followerConfig.Voltage.PeakReverseVoltage = -LiftConstants.MAX_VOLTAGE;
     followerConfig.withMotorOutput(
         new MotorOutputConfigs()
             .withInverted(InvertedValue.CounterClockwise_Positive)
             .withNeutralMode(NeutralModeValue.Brake));
+    followerConfig.withCurrentLimits(
+        new CurrentLimitsConfigs()
+            .withStatorCurrentLimit(STATOR_CURRENT_LIMIT_AMPS)
+            .withStatorCurrentLimitEnable(true)
+            .withSupplyCurrentLimit(SUPPLY_CURRENT_LIMIT_AMPS)
+            .withSupplyCurrentLimitEnable(true));
 
     tryUntilOk(5, () -> followerMotor.getConfigurator().apply(followerConfig, 0.25));
 
@@ -129,28 +169,55 @@ public class LiftIOTalonFX implements LiftIO {
         followerCurrent);
     ParentDevice.optimizeBusUtilizationForAll(leaderMotor, followerMotor);
 
-    hardwareConfigured = true;
-    enforceFollowerMode();
-    leaderMotor.setPosition(0.0);
+    followerRequest =
+        new Follower(
+            leaderMotor.getDeviceID(),
+            LiftConstants.FOLLOWER_OPPOSES_LEADER
+                ? MotorAlignmentValue.Opposed
+                : MotorAlignmentValue.Aligned);
+    tryUntilOk(5, () -> followerMotor.setControl(followerRequest));
+
+    leaderSim = leaderMotor.getSimState();
+    followerSim = followerMotor.getSimState();
+    if (RobotBase.isSimulation()) {
+      leaderSim.Orientation = ChassisReference.CounterClockwise_Positive;
+      followerSim.Orientation = ChassisReference.CounterClockwise_Positive;
+    }
+
+    tryUntilOk(5, () -> leaderMotor.setPosition(0.0, 0.25));
+    tryUntilOk(5, () -> followerMotor.setPosition(0.0, 0.25));
   }
 
-  /** Reasserts the follower relationship; the follower has no independent control path. */
-  private void enforceFollowerMode() {
-    if (hardwareConfigured) {
-      followerMotor.setControl(
-          new Follower(leaderMotor.getDeviceID(), 
-          LiftConstants.FOLLOWER_OPPOSES_LEADER 
-            ? MotorAlignmentValue.Opposed 
-            : MotorAlignmentValue.Aligned));
-    }
+  private void stepSimulation() {
+    double batteryVolts = RobotController.getBatteryVoltage();
+    leaderSim.setSupplyVoltage(batteryVolts);
+    followerSim.setSupplyVoltage(batteryVolts);
+
+    elevatorMotorSim.setInput(leaderSim.getMotorVoltage());
+    elevatorMotorSim.update(LOOP_PERIOD_SECONDS);
+
+    double radius = LiftConstants.PULLEY_RADIUS_METERS;
+    double relativeHeightMeters =
+        elevatorMotorSim.getPositionMeters() - LiftConstants.SIM_STARTING_HEIGHT_METERS;
+
+    double mechanismRotations = relativeHeightMeters / (2.0 * Math.PI * radius);
+    double mechanismRps = elevatorMotorSim.getVelocityMetersPerSecond() / (2.0 * Math.PI * radius);
+
+    double rotorRotations = mechanismRotations * LiftConstants.MOTOR_GEAR_RATIO;
+    double rotorRps = mechanismRps * LiftConstants.MOTOR_GEAR_RATIO;
+
+    leaderSim.setRawRotorPosition(rotorRotations);
+    leaderSim.setRotorVelocity(rotorRps);
+
+    double followerSign = LiftConstants.FOLLOWER_OPPOSES_LEADER ? -1.0 : 1.0;
+    followerSim.setRawRotorPosition(followerSign * rotorRotations);
+    followerSim.setRotorVelocity(followerSign * rotorRps);
   }
 
   @Override
   public void updateInputs(LiftIOInputs inputs) {
-    if (!hardwareConfigured) {
-      inputs.leaderMotorConnected = false;
-      inputs.followerMotorConnected = false;
-      return;
+    if (RobotBase.isSimulation()) {
+      stepSimulation();
     }
 
     var leaderStatus =
@@ -173,44 +240,53 @@ public class LiftIOTalonFX implements LiftIO {
     inputs.followerAppliedVolts = followerAppliedVolts.getValueAsDouble();
     inputs.followerCurrentAmps = followerCurrent.getValueAsDouble();
 
-    enforceFollowerMode();
+    if (inputs.followerMotorConnected && !wasFollowerConnected) {
+      followerMotor.setControl(followerRequest);
+    }
+    wasFollowerConnected = inputs.followerMotorConnected;
   }
 
   @Override
   public void setPosition(double positionRad, boolean useMotionMagic) {
-    if (hardwareConfigured) {
-      if (useMotionMagic) {
-        leaderMotor.setControl(motionRequest.withPosition(Units.radiansToRotations(positionRad)));
-      } else {
-        leaderMotor.setControl(positionRequest.withPosition(Units.radiansToRotations(positionRad)));
-      }
-      enforceFollowerMode();
+    if (Double.isNaN(positionRad)) {
+      return;
+    }
+    double rotations = Units.radiansToRotations(positionRad);
+    if (useMotionMagic) {
+      leaderMotor.setControl(motionRequest.withPosition(rotations));
+    } else {
+      leaderMotor.setControl(positionRequest.withPosition(rotations));
     }
   }
 
   @Override
   public void setVoltage(double volts) {
-    if (hardwareConfigured) {
-      double clampedVolts =
-          Math.max(-LiftConstants.MAX_VOLTAGE, Math.min(LiftConstants.MAX_VOLTAGE, volts));
-      leaderMotor.setControl(voltageRequest.withOutput(clampedVolts));
-      enforceFollowerMode();
+    if (Double.isNaN(volts)) {
+      volts = 0.0;
     }
+    double clampedVolts =
+        Math.max(-LiftConstants.MAX_VOLTAGE, Math.min(LiftConstants.MAX_VOLTAGE, volts));
+    leaderMotor.setControl(voltageRequest.withOutput(clampedVolts));
   }
 
   @Override
   public void setCoast() {
-    if (hardwareConfigured) {
-      leaderMotor.setControl(coastRequest);
-      enforceFollowerMode();
-    }
+    applyNeutralMode(NeutralModeValue.Coast);
+    leaderMotor.setControl(coastRequest);
   }
 
   @Override
   public void setBrake() {
-    if (hardwareConfigured) {
-      leaderMotor.setControl(brakeRequest);
-      enforceFollowerMode();
+    applyNeutralMode(NeutralModeValue.Brake);
+    leaderMotor.setControl(neutralRequest);
+  }
+
+  private void applyNeutralMode(NeutralModeValue mode) {
+    if (mode == currentNeutralMode) {
+      return;
     }
+    leaderMotor.setNeutralMode(mode);
+    followerMotor.setNeutralMode(mode);
+    currentNeutralMode = mode;
   }
 }
