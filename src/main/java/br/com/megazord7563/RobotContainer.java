@@ -6,6 +6,7 @@
 
 package br.com.megazord7563;
 
+import br.com.megazord7563.Constants.DriveMode;
 import br.com.megazord7563.commands.drive.DriveCommands;
 import br.com.megazord7563.generated.TunerConstants;
 import br.com.megazord7563.subsystems.drive.DriveSubsystem;
@@ -24,6 +25,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -125,7 +127,8 @@ public class RobotContainer {
             driveSubsystem,
             () -> -controller.getLeftY(),
             () -> -controller.getLeftX(),
-            () -> -controller.getRightX()));
+            () -> -controller.getRightX(),
+            () -> controller.leftStick().getAsBoolean()));
 
     // Lock to 0° when A button is held
     /**
@@ -174,7 +177,7 @@ public class RobotContainer {
 
     // Reset gyro to 0° when B button is pressed
     controller
-        .b()
+        .start()
         .onTrue(
             Commands.runOnce(
                     () ->
@@ -183,6 +186,37 @@ public class RobotContainer {
                                 driveSubsystem.getPose().getTranslation(), Rotation2d.kZero)),
                     driveSubsystem)
                 .ignoringDisable(true));
+
+
+    controller
+        .rightBumper()
+        .onTrue(
+            new InstantCommand(
+                    () -> 
+                    RobotState.getInstance()
+                        .setDriveMode(DriveMode.MAX)
+                    )
+                );
+
+    controller
+        .leftBumper()
+        .onTrue(
+            new InstantCommand(
+                    () -> 
+                    RobotState.getInstance()
+                        .setDriveMode(DriveMode.SLOW)
+                    )
+                );
+
+    controller
+        .leftBumper().negate().and(controller.rightBumper().negate())
+        .onTrue(
+            new InstantCommand(
+                () -> 
+                RobotState.getInstance()
+                    .setDriveMode(DriveMode.FAST)
+            )
+        );
   }
 
   /** Use this to pass the drive subsystem to the main {@link Robot} class. */

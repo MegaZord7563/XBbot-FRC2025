@@ -36,17 +36,20 @@ public final class Constants {
     REPLAY
   }
 
-  public static final class DriveConstants {
-    public static enum DriveMode {
-      MAX(0.95),
-      FAST(0.6),
-      LIFT(0.3);
+  public enum DriveMode {
+    SLOW(0.3), // Very low speed for precise maneuvers (e.g., scoring)
+    FAST(0.6), // Normal driving speed
+    MAX(0.9), // Highest possible speed (e.g., traveling across the field)
+    SHOOTING(0.2); // Extremely slow speed for shooting better precision on move
 
-      public final double speedLimit;
+    private double speedValue;
 
-      DriveMode(double speedLimit) {
-        this.speedLimit = speedLimit;
-      }
+    private DriveMode(double speedValue) {
+      this.speedValue = speedValue;
+    }
+
+    public double getSpeedValue() {
+      return speedValue;
     }
   }
 }

@@ -11,8 +11,11 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import org.littletonrobotics.junction.AutoLogOutput;
 
+import br.com.megazord7563.Constants.DriveMode;
+
 public class RobotState {
   private static Pose2d robotPose = Pose2d.kZero;
+  private static DriveMode driveMode = DriveMode.FAST; // Default drive mode, can be changed by commands
   private static ChassisSpeeds robotVelocity = new ChassisSpeeds();
 
   // ── Singleton ─────────────────────────────────────────────────────────────────
@@ -48,13 +51,39 @@ public class RobotState {
     return ChassisSpeeds.fromRobotRelativeSpeeds(robotVelocity, getRobotRotation());
   }
 
+  @AutoLogOutput(key = "RobotState/DriveMode")
+  public DriveMode getDriveMode() {
+    return driveMode;
+  }
+
   // ── Setters ─────────────────────────────────────────────────────────────────
 
   public void setRobotPose(Pose2d robotPose) {
     RobotState.robotPose = robotPose;
   }
 
+  public void setDriveMode(DriveMode driveMode)
+  {
+    RobotState.driveMode = driveMode;
+  }
+
   public void setRobotVelocity(ChassisSpeeds robotVelocity) {
     RobotState.robotVelocity = robotVelocity;
+  }
+
+   public void toggleDriveMode() {
+    switch (driveMode) {
+      case SLOW:
+        driveMode = DriveMode.FAST;
+        break;
+      case FAST:
+        driveMode = DriveMode.MAX;
+        break;
+      case MAX:
+        driveMode = DriveMode.SLOW;
+        break;
+      default:
+        driveMode = DriveMode.FAST; // Default to FAST if somehow in an unknown state
+    }
   }
 }

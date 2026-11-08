@@ -33,6 +33,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -70,7 +71,8 @@ public class DriveCommands {
       DriveSubsystem drive,
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
-      DoubleSupplier omegaSupplier) {
+      DoubleSupplier omegaSupplier,
+      BooleanSupplier isLeftStickPressed) {
     return Commands.run(
         () -> {
           // Get linear velocity
@@ -88,7 +90,10 @@ public class DriveCommands {
               new ChassisSpeeds(
                   linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                   linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                  omega * drive.getMaxAngularSpeedRadPerSec());
+                  isLeftStickPressed.getAsBoolean() 
+                      ? 0.9 * omega * drive.getMaxAngularSpeedRadPerSec() 
+                      : 0.6 * omega * drive.getMaxAngularSpeedRadPerSec());
+
           boolean isFlipped =
               DriverStation.getAlliance().isPresent()
                   && DriverStation.getAlliance().get() == Alliance.Red;
