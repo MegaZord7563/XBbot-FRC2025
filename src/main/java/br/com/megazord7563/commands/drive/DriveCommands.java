@@ -13,6 +13,7 @@
 
 package br.com.megazord7563.commands.drive;
 
+import br.com.megazord7563.RobotState;
 import br.com.megazord7563.subsystems.drive.DriveSubsystem;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -88,8 +89,8 @@ public class DriveCommands {
           // Convert to field relative speeds & send command
           ChassisSpeeds speeds =
               new ChassisSpeeds(
-                  linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
-                  linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
+                  linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec() * RobotState.getInstance().getDriveMode().getSpeedValue(),
+                  linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec() * RobotState.getInstance().getDriveMode().getSpeedValue(),
                   isLeftStickPressed.getAsBoolean()
                       ? 0.9 * omega * drive.getMaxAngularSpeedRadPerSec()
                       : 0.6 * omega * drive.getMaxAngularSpeedRadPerSec());

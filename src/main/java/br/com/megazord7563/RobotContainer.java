@@ -18,6 +18,8 @@ import br.com.megazord7563.subsystems.drive.ModuleIOTalonFX;
 import br.com.megazord7563.subsystems.lift.Lift;
 import br.com.megazord7563.subsystems.lift.LiftIO;
 import br.com.megazord7563.subsystems.lift.LiftIOTalonFX;
+import br.com.megazord7563.util.simulation.MapleSimSwerveDrivetrain;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -40,6 +42,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final DriveSubsystem driveSubsystem;
+  private MapleSimSwerveDrivetrain mapleSimDrivetrain;
   private final Lift lift;
 
   // Controller
@@ -63,6 +66,7 @@ public class RobotContainer {
         break;
 
       case SIM:
+        mapleSimDrivetrain = new MapleSimSwerveDrivetrain();
         // Sim robot, instantiate physics sim IO implementations
         driveSubsystem =
             new DriveSubsystem(

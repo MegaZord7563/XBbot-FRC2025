@@ -52,6 +52,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import org.ironmaple.simulation.drivesims.COTS;
+import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
+import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -84,6 +88,27 @@ public class DriveSubsystem extends SubsystemBase {
               TunerConstants.FrontLeft.SlipCurrent,
               1),
           getModuleTranslations());
+
+    private static DriveTrainSimulationConfig mapleSimConfig = null;
+
+    public static DriveTrainSimulationConfig getMapleSimConfig() {
+        if (mapleSimConfig != null) return mapleSimConfig;
+
+        return mapleSimConfig = DriveTrainSimulationConfig.Default()
+                .withRobotMass(Kilograms.of(ROBOT_MASS_KG))
+                .withCustomModuleTranslations(getModuleTranslations())
+                .withGyro(COTS.ofPigeon2())
+                .withSwerveModule(new SwerveModuleSimulationConfig(
+                        DCMotor.getKrakenX60Foc(1),
+                        DCMotor.getKrakenX60Foc(1),
+                        TunerConstants.FrontLeft.DriveMotorGearRatio,
+                        TunerConstants.FrontLeft.SteerMotorGearRatio,
+                        Volts.of(TunerConstants.FrontLeft.DriveFrictionVoltage),
+                        Volts.of(TunerConstants.FrontLeft.SteerFrictionVoltage),
+                        Inches.of(2),
+                        KilogramSquareMeters.of(TunerConstants.FrontLeft.SteerInertia),
+                        WHEEL_COF));
+    }
 
   static final Lock odometryLock = new ReentrantLock();
   private final GyroIO gyroIO;
@@ -358,8 +383,7 @@ public class DriveSubsystem extends SubsystemBase {
 
   /** Returns the maximum linear speed in meters per sec. */
   public double getMaxLinearSpeedMetersPerSec() {
-    return TunerConstants.kSpeedAt12Volts.in(MetersPerSecond)
-        * robotState.getDriveMode().getSpeedValue();
+    return TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
   }
 
   /** Returns the maximum angular speed in radians per sec. */
