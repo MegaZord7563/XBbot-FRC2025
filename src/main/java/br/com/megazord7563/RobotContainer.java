@@ -11,6 +11,7 @@ import br.com.megazord7563.commands.drive.DriveCommands;
 import br.com.megazord7563.generated.TunerConstants;
 import br.com.megazord7563.subsystems.drive.DriveSubsystem;
 import br.com.megazord7563.subsystems.drive.GyroIO;
+import br.com.megazord7563.subsystems.drive.GyroIOMapleSim;
 import br.com.megazord7563.subsystems.drive.GyroIOPigeon2;
 import br.com.megazord7563.subsystems.drive.ModuleIO;
 import br.com.megazord7563.subsystems.drive.ModuleIOSim;
@@ -74,7 +75,7 @@ public class RobotContainer {
                 mapleSimDrivetrain = new MapleSimSwerveDrivetrain();
 
                 driveSubsystem = new DriveSubsystem(
-                        new GyroIO() {},
+                        new GyroIOMapleSim(mapleSimDrivetrain.getSimulation().getGyroSimulation()),
                         new ModuleIOSim(mapleSimDrivetrain.getFrontLeftModule()),
                         new ModuleIOSim(mapleSimDrivetrain.getFrontRightModule()),
                         new ModuleIOSim(mapleSimDrivetrain.getBackLeftModule()),
