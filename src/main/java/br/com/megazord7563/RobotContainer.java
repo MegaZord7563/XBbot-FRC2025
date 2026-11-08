@@ -70,7 +70,6 @@ public class RobotContainer {
                 break;
 
             case SIM:
-                mapleSimDrivetrain = new MapleSimSwerveDrivetrain();
                 // Sim robot, instantiate physics sim IO implementations
                 mapleSimDrivetrain = new MapleSimSwerveDrivetrain();
 
