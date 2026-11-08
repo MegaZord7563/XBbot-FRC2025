@@ -16,6 +16,7 @@ package br.com.megazord7563.subsystems.drive;
 import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import java.util.Arrays;
@@ -32,6 +33,10 @@ import br.com.megazord7563.util.PhoenixUtil;
 public class ModuleIOSim implements ModuleIO {
     // TunerConstants doesn't support separate sim constants, so they are declared locally
     private static final double DRIVE_KS = 0.03;
+    // Convert CTRE's voltage gains from rotations to radians for this PIDController.
+    private static final double TURN_KP = 22.967 / (2.0 * Math.PI);
+    private static final double TURN_KD = 0.38257 / (2.0 * Math.PI);
+    private static final double MAX_SIM_VOLTAGE = 12.0;
     private static final double DRIVE_KV_ROT = 0.91035; // Same units as TunerConstants: (volt * secs) / rotation
     private static final double DRIVE_KV = 1.0 / Units.rotationsToRadians(1.0 / DRIVE_KV_ROT);
 
@@ -55,7 +60,7 @@ public class ModuleIOSim implements ModuleIO {
         this.turnMotor = moduleSimulation.useGenericControllerForSteer().withCurrentLimit(Amps.of(20));
 
         this.driveController = new PIDController(0.05, 0.0, 0.0);
-        this.turnController = new PIDController(8.0, 0.0, 0.0);
+        this.turnController = new PIDController(TURN_KP, 0.0, TURN_KD);
 
         // Enable wrapping for turn PID
         turnController.enableContinuousInput(-Math.PI, Math.PI);
@@ -72,8 +77,10 @@ public class ModuleIOSim implements ModuleIO {
             driveController.reset();
         }
         if (turnClosedLoop) {
-            turnAppliedVolts = turnController.calculate(
-                    moduleSimulation.getSteerAbsoluteFacing().getRadians());
+            turnAppliedVolts = MathUtil.clamp(
+                    turnController.calculate(moduleSimulation.getSteerAbsoluteFacing().getRadians()),
+                    -MAX_SIM_VOLTAGE,
+                    MAX_SIM_VOLTAGE);
         } else {
             turnController.reset();
         }

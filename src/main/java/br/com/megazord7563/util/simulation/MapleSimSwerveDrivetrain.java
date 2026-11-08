@@ -10,6 +10,7 @@ import br.com.megazord7563.Constants;
 import br.com.megazord7563.Constants.Mode;
 import br.com.megazord7563.subsystems.drive.DriveSubsystem;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
@@ -34,12 +35,12 @@ public final class MapleSimSwerveDrivetrain {
     private final SwerveModuleSimulation[] modules;
 
     /**
-     * Creates the drivetrain simulation at the origin of the field.
+     * Creates the drivetrain simulation at a safe position inside the field.
      *
      * @throws IllegalStateException if instantiated outside simulation mode
      */
     public MapleSimSwerveDrivetrain() {
-        this(new Pose2d());
+        this(new Pose2d(3.0, 3.0, new Rotation2d()));
     }
 
     /**
