@@ -43,8 +43,7 @@ public class PhoenixUtil {
     double currentTimestamp = Timer.getFPGATimestamp();
 
     for (int i = 0; i < sampleCount; i++) {
-      odometryTimeStamps[i] =
-          currentTimestamp - simulationPeriodSeconds + i * simulationDtSeconds;
+      odometryTimeStamps[i] = currentTimestamp - simulationPeriodSeconds + i * simulationDtSeconds;
     }
 
     return odometryTimeStamps;

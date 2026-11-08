@@ -15,7 +15,6 @@ package br.com.megazord7563;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-
 import org.ironmaple.simulation.SimulatedArena;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -145,8 +144,16 @@ public class Robot extends LoggedRobot {
 
   /** This function is called periodically whilst in simulation. */
   @Override
-  public void simulationPeriodic() 
-  {
+  public void simulationPeriodic() {
     SimulatedArena.getInstance().simulationPeriodic();
+
+    // Ground-truth pose from the physics simulation (compare with Odometry/Robot).
+    if (Constants.currentMode == Constants.Mode.SIM) {
+      Logger.recordOutput("FieldSimulation/RobotPosition", robotContainer.getMapleSimPose());
+      Logger.recordOutput(
+          "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
+      Logger.recordOutput(
+          "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
+    }
   }
 }

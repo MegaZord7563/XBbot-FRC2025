@@ -89,8 +89,12 @@ public class DriveCommands {
           // Convert to field relative speeds & send command
           ChassisSpeeds speeds =
               new ChassisSpeeds(
-                  linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec() * RobotState.getInstance().getDriveMode().getSpeedValue(),
-                  linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec() * RobotState.getInstance().getDriveMode().getSpeedValue(),
+                  linearVelocity.getX()
+                      * drive.getMaxLinearSpeedMetersPerSec()
+                      * RobotState.getInstance().getDriveMode().getSpeedValue(),
+                  linearVelocity.getY()
+                      * drive.getMaxLinearSpeedMetersPerSec()
+                      * RobotState.getInstance().getDriveMode().getSpeedValue(),
                   isLeftStickPressed.getAsBoolean()
                       ? 0.9 * omega * drive.getMaxAngularSpeedRadPerSec()
                       : 0.6 * omega * drive.getMaxAngularSpeedRadPerSec());

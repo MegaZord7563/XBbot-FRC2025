@@ -145,3 +145,10 @@ When changing robot hardware, update the related code and configuration together
 ## License
 
 See [LICENSE](LICENSE) and the third-party license notices in the repository for applicable terms.
+
+## Simulação (MapleSim)
+
+- Rode com *Simulate Robot Code* e marque **Sim GUI** (ou conecte um Driver Station / AdvantageScope). O `build.gradle` deixa a GUI desligada por padrão para permitir *replay* do AdvantageKit; sem ela não há joystick nem botão de *Enable*.
+- O robô só se move com o Driver Station em **Enabled** (teleop).
+- `Odometry/Robot` é a pose estimada; `FieldSimulation/RobotPosition` é a pose real da física do MapleSim. Elas devem coincidir.
+- Resetar a odometria (botão Start ou início de auto do PathPlanner) também teleporta o robô simulado.

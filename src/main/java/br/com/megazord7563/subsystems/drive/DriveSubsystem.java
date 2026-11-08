@@ -52,7 +52,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
@@ -75,6 +76,12 @@ public class DriveSubsystem extends SubsystemBase {
   private static final double ROBOT_MASS_KG = 74.088;
   private static final double ROBOT_MOI = 6.883;
   private static final double WHEEL_COF = 1.2;
+
+  // Steer inertia used ONLY by MapleSim. TunerConstants' 0.01 kg*m^2 is too small for MapleSim's
+  // 4 ms sub-tick (Kraken FOC + 21.4:1 steer reduction): the integration becomes numerically
+  // unstable, the steer spins uncontrollably and the pose ends up NaN. 0.02 matches the
+  // AdvantageKit template and is stable.
+  private static final double SIM_STEER_INERTIA = 0.02;
   private static final RobotConfig PP_CONFIG =
       new RobotConfig(
           ROBOT_MASS_KG,
@@ -89,26 +96,28 @@ public class DriveSubsystem extends SubsystemBase {
               1),
           getModuleTranslations());
 
-    private static DriveTrainSimulationConfig mapleSimConfig = null;
+  private static DriveTrainSimulationConfig mapleSimConfig = null;
 
-    public static DriveTrainSimulationConfig getMapleSimConfig() {
-        if (mapleSimConfig != null) return mapleSimConfig;
+  public static DriveTrainSimulationConfig getMapleSimConfig() {
+    if (mapleSimConfig != null) return mapleSimConfig;
 
-        return mapleSimConfig = DriveTrainSimulationConfig.Default()
-                .withRobotMass(Kilograms.of(ROBOT_MASS_KG))
-                .withCustomModuleTranslations(getModuleTranslations())
-                .withGyro(COTS.ofPigeon2())
-                .withSwerveModule(new SwerveModuleSimulationConfig(
-                        DCMotor.getKrakenX60Foc(1),
-                        DCMotor.getKrakenX60Foc(1),
-                        TunerConstants.FrontLeft.DriveMotorGearRatio,
-                        TunerConstants.FrontLeft.SteerMotorGearRatio,
-                        Volts.of(TunerConstants.FrontLeft.DriveFrictionVoltage),
-                        Volts.of(TunerConstants.FrontLeft.SteerFrictionVoltage),
-                        Inches.of(2),
-                        KilogramSquareMeters.of(TunerConstants.FrontLeft.SteerInertia),
-                        WHEEL_COF));
-    }
+    return mapleSimConfig =
+        DriveTrainSimulationConfig.Default()
+            .withRobotMass(Kilograms.of(ROBOT_MASS_KG))
+            .withCustomModuleTranslations(getModuleTranslations())
+            .withGyro(COTS.ofPigeon2())
+            .withSwerveModule(
+                new SwerveModuleSimulationConfig(
+                    DCMotor.getKrakenX60Foc(1),
+                    DCMotor.getKrakenX60Foc(1),
+                    TunerConstants.FrontLeft.DriveMotorGearRatio,
+                    TunerConstants.FrontLeft.SteerMotorGearRatio,
+                    Volts.of(TunerConstants.FrontLeft.DriveFrictionVoltage),
+                    Volts.of(TunerConstants.FrontLeft.SteerFrictionVoltage),
+                    Meters.of(TunerConstants.FrontLeft.WheelRadius),
+                    KilogramSquareMeters.of(SIM_STEER_INERTIA),
+                    WHEEL_COF));
+  }
 
   static final Lock odometryLock = new ReentrantLock();
   private final GyroIO gyroIO;
@@ -131,6 +140,12 @@ public class DriveSubsystem extends SubsystemBase {
       new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, Pose2d.kZero);
 
   private RobotState robotState = RobotState.getInstance();
+
+  /** Teleports the MapleSim robot when odometry is reset. Only set in simulation. */
+  private Consumer<Pose2d> simulationPoseResetter = null;
+
+  /** Provides the MapleSim physics pose so odometry respects collisions. Only set in simulation. */
+  private Supplier<Pose2d> simulationPoseSupplier = null;
 
   public DriveSubsystem(
       GyroIO gyroIO,
@@ -236,6 +251,12 @@ public class DriveSubsystem extends SubsystemBase {
 
       // Apply update
       poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
+    }
+
+    // Simulation only: follow the physics pose so wall collisions stop the odometry too.
+    if (Constants.currentMode == Mode.SIM && simulationPoseSupplier != null) {
+      poseEstimator.resetPosition(
+          rawGyroRotation, getModulePositions(), simulationPoseSupplier.get());
     }
 
     updateRobotState();
@@ -365,8 +386,23 @@ public class DriveSubsystem extends SubsystemBase {
     return getPose().getRotation();
   }
 
-  /** Resets the current odometry pose. */
+  /** Registers the supplier of the physics pose used to correct odometry (simulation only). */
+  public void setSimulationPoseSupplier(Supplier<Pose2d> supplier) {
+    simulationPoseSupplier = supplier;
+  }
+
+  /** Registers the callback that moves the simulated robot (simulation only). */
+  public void setSimulationPoseResetter(Consumer<Pose2d> resetter) {
+    simulationPoseResetter = resetter;
+  }
+
+  /** Resets the current odometry pose (and the simulated robot, when in simulation). */
   public void setPose(Pose2d pose) {
+    if (Constants.currentMode == Mode.SIM && simulationPoseResetter != null) {
+      simulationPoseResetter.accept(pose);
+      // The simulated gyro now reads the new heading; avoid a stale gyro offset.
+      rawGyroRotation = pose.getRotation();
+    }
     poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), pose);
     updateRobotState();
   }

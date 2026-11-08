@@ -12,27 +12,23 @@ import br.com.megazord7563.util.PhoenixUtil;
 import org.ironmaple.simulation.drivesims.GyroSimulation;
 
 public class GyroIOMapleSim implements GyroIO {
-    private final GyroSimulation gyroSimulation;
+  private final GyroSimulation gyroSimulation;
 
-    public GyroIOMapleSim(GyroSimulation gyroSimulation) {
-        this.gyroSimulation = gyroSimulation;
-    }
+  public GyroIOMapleSim(GyroSimulation gyroSimulation) {
+    this.gyroSimulation = gyroSimulation;
+  }
 
-    @Override
-    public void updateInputs(GyroIOInputs inputs) {
-        inputs.connected = true;
+  @Override
+  public void updateInputs(GyroIOInputs inputs) {
+    inputs.connected = true;
 
-        // Update current gyro readings.
-        inputs.yawPosition = gyroSimulation.getGyroReading();
-        inputs.yawVelocityRadPerSec =
-                gyroSimulation.getMeasuredAngularVelocity()
-                        .in(RadiansPerSecond);
+    // Update current gyro readings.
+    inputs.yawPosition = gyroSimulation.getGyroReading();
+    inputs.yawVelocityRadPerSec = gyroSimulation.getMeasuredAngularVelocity().in(RadiansPerSecond);
 
-        // Update high-frequency odometry readings.
-        inputs.odometryYawTimestamps =
-                PhoenixUtil.getSimulationOdometryTimeStamps();
+    // Update high-frequency odometry readings.
+    inputs.odometryYawTimestamps = PhoenixUtil.getSimulationOdometryTimeStamps();
 
-        inputs.odometryYawPositions =
-                gyroSimulation.getCachedGyroReadings();
-    }
+    inputs.odometryYawPositions = gyroSimulation.getCachedGyroReadings();
+  }
 }
