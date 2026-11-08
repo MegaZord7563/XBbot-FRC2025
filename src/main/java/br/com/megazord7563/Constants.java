@@ -40,7 +40,7 @@ public final class Constants {
     SLOW(0.3), // Very low speed for precise maneuvers (e.g., scoring)
     FAST(0.6), // Normal driving speed
     MAX(0.9), // Highest possible speed (e.g., traveling across the field)
-    SHOOTING(0.2); // Extremely slow speed for shooting better precision on move
+    LIFT(0.2); // Extremely slow speed for shooting better precision on move
 
     private double speedValue;
 

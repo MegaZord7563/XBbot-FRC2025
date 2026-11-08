@@ -358,7 +358,8 @@ public class DriveSubsystem extends SubsystemBase {
 
   /** Returns the maximum linear speed in meters per sec. */
   public double getMaxLinearSpeedMetersPerSec() {
-    return TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
+    return TunerConstants.kSpeedAt12Volts.in(MetersPerSecond)
+        * robotState.getDriveMode().getSpeedValue();
   }
 
   /** Returns the maximum angular speed in radians per sec. */
@@ -375,5 +376,4 @@ public class DriveSubsystem extends SubsystemBase {
       new Translation2d(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)
     };
   }
-
 }

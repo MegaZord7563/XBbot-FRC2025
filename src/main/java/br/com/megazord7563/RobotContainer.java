@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -187,36 +188,28 @@ public class RobotContainer {
                     driveSubsystem)
                 .ignoringDisable(true));
 
+    Trigger liftHomed = new Trigger(() -> lift.isHomed());
+
+    liftHomed
+        .negate()
+        .onTrue(new InstantCommand(() -> RobotState.getInstance().setDriveMode(DriveMode.LIFT)));
 
     controller
         .rightBumper()
-        .onTrue(
-            new InstantCommand(
-                    () -> 
-                    RobotState.getInstance()
-                        .setDriveMode(DriveMode.MAX)
-                    )
-                );
+        .and(liftHomed)
+        .onTrue(new InstantCommand(() -> RobotState.getInstance().setDriveMode(DriveMode.MAX)));
 
     controller
         .leftBumper()
-        .onTrue(
-            new InstantCommand(
-                    () -> 
-                    RobotState.getInstance()
-                        .setDriveMode(DriveMode.SLOW)
-                    )
-                );
+        .and(liftHomed)
+        .onTrue(new InstantCommand(() -> RobotState.getInstance().setDriveMode(DriveMode.SLOW)));
 
     controller
-        .leftBumper().negate().and(controller.rightBumper().negate())
-        .onTrue(
-            new InstantCommand(
-                () -> 
-                RobotState.getInstance()
-                    .setDriveMode(DriveMode.FAST)
-            )
-        );
+        .leftBumper()
+        .negate()
+        .and(controller.rightBumper().negate())
+        .and(liftHomed)
+        .onTrue(new InstantCommand(() -> RobotState.getInstance().setDriveMode(DriveMode.FAST)));
   }
 
   /** Use this to pass the drive subsystem to the main {@link Robot} class. */

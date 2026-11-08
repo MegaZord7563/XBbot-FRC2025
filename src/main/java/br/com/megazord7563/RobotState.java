@@ -6,16 +6,16 @@
 
 package br.com.megazord7563;
 
+import br.com.megazord7563.Constants.DriveMode;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import org.littletonrobotics.junction.AutoLogOutput;
 
-import br.com.megazord7563.Constants.DriveMode;
-
 public class RobotState {
   private static Pose2d robotPose = Pose2d.kZero;
-  private static DriveMode driveMode = DriveMode.FAST; // Default drive mode, can be changed by commands
+  private static DriveMode driveMode =
+      DriveMode.FAST; // Default drive mode, can be changed by commands
   private static ChassisSpeeds robotVelocity = new ChassisSpeeds();
 
   // ── Singleton ─────────────────────────────────────────────────────────────────
@@ -62,8 +62,7 @@ public class RobotState {
     RobotState.robotPose = robotPose;
   }
 
-  public void setDriveMode(DriveMode driveMode)
-  {
+  public void setDriveMode(DriveMode driveMode) {
     RobotState.driveMode = driveMode;
   }
 
@@ -71,7 +70,7 @@ public class RobotState {
     RobotState.robotVelocity = robotVelocity;
   }
 
-   public void toggleDriveMode() {
+  public void toggleDriveMode() {
     switch (driveMode) {
       case SLOW:
         driveMode = DriveMode.FAST;

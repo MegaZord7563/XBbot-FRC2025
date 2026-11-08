@@ -137,6 +137,10 @@ public class Lift extends SubsystemBase {
     return inputs.followerMotorConnected;
   }
 
+  public boolean isHomed() {
+    return getPositionMetters() < 0.05;
+  }
+
   // ── Commands ────────────────────────────────────────────────────────────────
 
   /** Holds the lift at the requested position until interrupted. */

@@ -90,8 +90,8 @@ public class DriveCommands {
               new ChassisSpeeds(
                   linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                   linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                  isLeftStickPressed.getAsBoolean() 
-                      ? 0.9 * omega * drive.getMaxAngularSpeedRadPerSec() 
+                  isLeftStickPressed.getAsBoolean()
+                      ? 0.9 * omega * drive.getMaxAngularSpeedRadPerSec()
                       : 0.6 * omega * drive.getMaxAngularSpeedRadPerSec());
 
           boolean isFlipped =
