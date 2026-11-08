@@ -225,11 +225,11 @@ public class DriveSubsystem extends SubsystemBase {
       }
 
       // Update gyro angle
-      if (gyroInputs.connected) {
-        // Use the real gyro angle
+      if (gyroInputs.connected && i < gyroInputs.odometryYawPositions.length) {
+        // Use the gyro sample when one is available for this odometry timestamp.
         rawGyroRotation = gyroInputs.odometryYawPositions[i];
       } else {
-        // Use the angle delta from the kinematics and module deltas
+        // Fall back to wheel kinematics if the gyro sample is unavailable.
         Twist2d twist = kinematics.toTwist2d(moduleDeltas);
         rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
       }

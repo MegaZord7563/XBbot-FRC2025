@@ -13,11 +13,11 @@
 
 package br.com.megazord7563.util;
 
+import static edu.wpi.first.units.Units.*;
+
 import com.ctre.phoenix6.StatusCode;
 import edu.wpi.first.wpilibj.Timer;
 import java.util.function.Supplier;
-import static edu.wpi.first.units.Units.*;
-
 import org.ironmaple.simulation.SimulatedArena;
 
 public class PhoenixUtil {
@@ -29,14 +29,24 @@ public class PhoenixUtil {
     }
   }
 
-   public static double[] getSimulationOdometryTimeStamps() {
-        final double[] odometryTimeStamps = new double[SimulatedArena.getSimulationSubTicksIn1Period()];
-        for (int i = 0; i < odometryTimeStamps.length; i++) {
-            odometryTimeStamps[i] = Timer.getFPGATimestamp()
-                    - 0.02
-                    + i * SimulatedArena.getSimulationDt().in(Seconds);
-        }
+  /**
+   * Returns timestamps for the cached MapleSim odometry samples.
+   *
+   * <p>The timestamp span is derived from the arena's configured sub-tick count and duration,
+   * keeping it aligned with MapleSim's default simulation timing.
+   */
+  public static double[] getSimulationOdometryTimeStamps() {
+    int sampleCount = SimulatedArena.getSimulationSubTicksIn1Period();
+    double simulationDtSeconds = SimulatedArena.getSimulationDt().in(Seconds);
+    double simulationPeriodSeconds = sampleCount * simulationDtSeconds;
+    double[] odometryTimeStamps = new double[sampleCount];
+    double currentTimestamp = Timer.getFPGATimestamp();
 
-        return odometryTimeStamps;
+    for (int i = 0; i < sampleCount; i++) {
+      odometryTimeStamps[i] =
+          currentTimestamp - simulationPeriodSeconds + i * simulationDtSeconds;
     }
+
+    return odometryTimeStamps;
+  }
 }

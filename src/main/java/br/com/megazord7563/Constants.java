@@ -23,7 +23,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 public final class Constants {
   public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
-  public static final double periodicLoopPeriod = 0.01; // 20 ms
+  public static final double periodicLoopPeriod = 0.02; // 20 ms (MapleSim default robot period)
 
   public static enum Mode {
     /** Running on a real robot. */
@@ -38,9 +38,9 @@ public final class Constants {
 
   public enum DriveMode {
     SLOW(0.3), // Very low speed for precise maneuvers (e.g., scoring)
-    FAST(0.6), // Normal driving speed
+    FAST(0.6), // Normal speed
     MAX(0.9), // Highest possible speed (e.g., traveling across the field)
-    LIFT(0.2); // Extremely slow speed for shooting better precision on move
+    LIFT(0.2); // Extremely slow speed for better precision while scoring on the move
 
     private double speedValue;
 
