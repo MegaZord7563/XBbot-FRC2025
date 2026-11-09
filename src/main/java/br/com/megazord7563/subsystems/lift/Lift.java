@@ -57,10 +57,6 @@ public class Lift extends SubsystemBase {
         getPositionMetters() > LiftConstants.LEVEL1_HARDLIMIT
             ? getPositionMetters() - LiftConstants.LEVEL1_HARDLIMIT
             : 0.0);
-    mechanism3d.setL3Height(
-        getPositionMetters() > LiftConstants.LEVEL2_HARDLIMIT + LiftConstants.LEVEL1_HARDLIMIT
-            ? getPositionMetters() - LiftConstants.LEVEL2_HARDLIMIT - LiftConstants.LEVEL1_HARDLIMIT
-            : 0.0);
   }
 
   // ── Setters ─────────────────────────────────────────────────────────────────

@@ -60,13 +60,11 @@ public final class LiftConstants {
 
   public static final double MOTOR_INERTIA = 0.6;
 
-  public static final double LEVEL1_HARDLIMIT = 0.40;
-  public static final double LEVEL2_HARDLIMIT = 0.59;
-  public static final double LEVEL3_HARDLIMIT = 0.59;
+  public static final double LEVEL1_HARDLIMIT = 0.75;
+  public static final double LEVEL2_HARDLIMIT = 0.75;
 
-  public static final double LEVEL1_HARDLIMIT_TOP = 0.59;
-  public static final double LEVEL2_HARDLIMIT_TOP = 1.18;
-  public static final double LEVEL3_HARDLIMIT_TOP = 1.58;
+  public static final double LEVEL1_HARDLIMIT_TOP = 0.75;
+  public static final double LEVEL2_HARDLIMIT_TOP = 1.50;
 
   public static final double POSITION_TOLERANCE_RAD = Math.toRadians(2.0);
 
@@ -76,7 +74,7 @@ public final class LiftConstants {
   public static final double LIFT_CARRIAGE_MASS_KG = 11;
 
   public static final double SIM_MIN_HEIGHT_METERS = 0.0;
-  public static final double SIM_MAX_HEIGHT_METERS = LEVEL3_HARDLIMIT_TOP;
+  public static final double SIM_MAX_HEIGHT_METERS = LEVEL2_HARDLIMIT_TOP;
   public static final double SIM_STARTING_HEIGHT_METERS = 0.0;
 
   public static final double STATOR_CURRENT_LIMIT_AMPS = 60.0;

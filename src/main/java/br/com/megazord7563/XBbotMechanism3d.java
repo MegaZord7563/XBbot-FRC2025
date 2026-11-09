@@ -21,7 +21,6 @@ public class XBbotMechanism3d {
 
   @Getter @Setter public double L1Height = 0.0;
   @Getter @Setter public double L2Height = 0.0;
-  @Getter @Setter public double L3Height = 0.0;
 
   public static XBbotMechanism3d getInstance() {
     if (instance == null) {
@@ -31,10 +30,16 @@ public class XBbotMechanism3d {
   }
 
   public void log() {
-    var pose_level3 = new Pose3d(new Translation3d(0.0, 0.0, L1Height), new Rotation3d());
+    var pose_level1 = new Pose3d(new Translation3d(0.0, 0.0, L1Height), new Rotation3d());
     var pose_level2 = new Pose3d(new Translation3d(0.0, 0.0, L2Height), new Rotation3d());
-    var pose_level1 = new Pose3d(new Translation3d(0.0, 0.0, L3Height), new Rotation3d());
+    var pose_outtake = new Pose3d(new Translation3d(0.0, 0.0, L1Height), new Rotation3d());
 
-    Logger.recordOutput("Mechanism3d/Components", pose_level1, pose_level2, pose_level3);
+    Logger.recordOutput(
+        "Mechanism3d/Components",
+        new Pose3d(),
+        pose_level1,
+        pose_level2,
+        pose_outtake,
+        new Pose3d());
   }
 }
