@@ -83,7 +83,7 @@ public final class LiftConstants {
   public static final double SUPPLY_CURRENT_LIMIT_AMPS = 40.0;
 
   public static final double MM_CRUISE_VELOCITY_RPS = 100.0;
-  public static final double MM_ACCELERATION_RPS2 = 600.0;
+  public static final double MM_ACCELERATION_RPS2 = 100.0;
   public static final double MM_JERK_RPS3 = 4000.0;
 
   private LiftConstants() {}

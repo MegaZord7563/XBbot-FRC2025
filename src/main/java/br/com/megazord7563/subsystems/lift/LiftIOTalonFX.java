@@ -16,6 +16,7 @@ import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.VoltageConfigs;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -41,7 +42,8 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 
 /**
- * Hardware IO implementation for the Lift subsystem using two CTRE Talon FX controllers, with
+ * Hardware IO implementation for the Lift subsystem using two CTRE Talon FX
+ * controllers, with
  * built-in simulation support through a WPILib {@link ElevatorSim}.
  */
 public class LiftIOTalonFX implements LiftIO {
@@ -50,16 +52,15 @@ public class LiftIOTalonFX implements LiftIO {
   private final TalonFXSimState leaderSim;
   private final TalonFXSimState followerSim;
 
-  private final ElevatorSim elevatorMotorSim =
-      new ElevatorSim(
-          LiftConstants.DC_MOTOR,
-          LiftConstants.MOTOR_GEAR_RATIO,
-          LiftConstants.LIFT_CARRIAGE_MASS_KG,
-          LiftConstants.PULLEY_RADIUS_METERS,
-          LiftConstants.SIM_MIN_HEIGHT_METERS,
-          LiftConstants.SIM_MAX_HEIGHT_METERS,
-          false, // simulate gravity
-          LiftConstants.SIM_STARTING_HEIGHT_METERS);
+  private final ElevatorSim elevatorMotorSim = new ElevatorSim(
+      LiftConstants.DC_MOTOR,
+      LiftConstants.MOTOR_GEAR_RATIO,
+      LiftConstants.LIFT_CARRIAGE_MASS_KG,
+      LiftConstants.PULLEY_RADIUS_METERS,
+      LiftConstants.SIM_MIN_HEIGHT_METERS,
+      LiftConstants.SIM_MAX_HEIGHT_METERS,
+      false, // simulate gravity
+      LiftConstants.SIM_STARTING_HEIGHT_METERS);
 
   private final PositionVoltage positionRequest = new PositionVoltage(0.0).withSlot(0);
   private final MotionMagicVoltage motionRequest = new MotionMagicVoltage(0.0).withSlot(0);
@@ -78,12 +79,10 @@ public class LiftIOTalonFX implements LiftIO {
   private final StatusSignal<Voltage> followerAppliedVolts;
   private final StatusSignal<Current> followerCurrent;
 
-  private final Debouncer leaderConnectedDebounce =
-      new Debouncer(0.5, Debouncer.DebounceType.kFalling);
-  private final Debouncer followerConnectedDebounce =
-      new Debouncer(0.5, Debouncer.DebounceType.kFalling);
+  private final Debouncer leaderConnectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
+  private final Debouncer followerConnectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
 
-  private boolean wasFollowerConnected = true;
+  //private boolean wasFollowerConnected = true;
   private NeutralModeValue currentNeutralMode = NeutralModeValue.Brake;
 
   public LiftIOTalonFX() {
@@ -110,6 +109,9 @@ public class LiftIOTalonFX implements LiftIO {
         new MotorOutputConfigs()
             .withInverted(InvertedValue.CounterClockwise_Positive)
             .withNeutralMode(NeutralModeValue.Brake));
+
+    leaderConfig.withVoltage(
+        new VoltageConfigs().withPeakForwardVoltage(6.0).withPeakReverseVoltage(-6.0));
     leaderConfig.withCurrentLimits(
         new CurrentLimitsConfigs()
             .withStatorCurrentLimit(LiftConstants.STATOR_CURRENT_LIMIT_AMPS)
@@ -163,12 +165,11 @@ public class LiftIOTalonFX implements LiftIO {
         followerCurrent);
     ParentDevice.optimizeBusUtilizationForAll(leaderMotor, followerMotor);
 
-    followerRequest =
-        new Follower(
-            leaderMotor.getDeviceID(),
-            LiftConstants.FOLLOWER_OPPOSES_LEADER
-                ? MotorAlignmentValue.Opposed
-                : MotorAlignmentValue.Aligned);
+    followerRequest = new Follower(
+        leaderMotor.getDeviceID(),
+        LiftConstants.FOLLOWER_OPPOSES_LEADER
+            ? MotorAlignmentValue.Opposed
+            : MotorAlignmentValue.Aligned);
     tryUntilOk(5, () -> followerMotor.setControl(followerRequest));
 
     leaderSim = leaderMotor.getSimState();
@@ -191,8 +192,7 @@ public class LiftIOTalonFX implements LiftIO {
     elevatorMotorSim.update(Constants.periodicLoopPeriod);
 
     double radius = LiftConstants.PULLEY_RADIUS_METERS;
-    double relativeHeightMeters =
-        elevatorMotorSim.getPositionMeters() - LiftConstants.SIM_STARTING_HEIGHT_METERS;
+    double relativeHeightMeters = elevatorMotorSim.getPositionMeters() - LiftConstants.SIM_STARTING_HEIGHT_METERS;
 
     double mechanismRotations = relativeHeightMeters / (2.0 * Math.PI * radius);
     double mechanismRps = elevatorMotorSim.getVelocityMetersPerSecond() / (2.0 * Math.PI * radius);
@@ -214,12 +214,10 @@ public class LiftIOTalonFX implements LiftIO {
       stepSimulation();
     }
 
-    var leaderStatus =
-        BaseStatusSignal.refreshAll(
-            leaderPosition, leaderVelocity, leaderAppliedVolts, leaderCurrent);
-    var followerStatus =
-        BaseStatusSignal.refreshAll(
-            followerPosition, followerVelocity, followerAppliedVolts, followerCurrent);
+    var leaderStatus = BaseStatusSignal.refreshAll(
+        leaderPosition, leaderVelocity, leaderAppliedVolts, leaderCurrent);
+    var followerStatus = BaseStatusSignal.refreshAll(
+        followerPosition, followerVelocity, followerAppliedVolts, followerCurrent);
 
     inputs.leaderMotorConnected = leaderConnectedDebounce.calculate(leaderStatus.isOK());
     inputs.leaderPositionRad = Units.rotationsToRadians(leaderPosition.getValueAsDouble());
@@ -229,15 +227,14 @@ public class LiftIOTalonFX implements LiftIO {
 
     inputs.followerMotorConnected = followerConnectedDebounce.calculate(followerStatus.isOK());
     inputs.followerPositionRad = Units.rotationsToRadians(followerPosition.getValueAsDouble());
-    inputs.followerVelocityRadPerSec =
-        Units.rotationsToRadians(followerVelocity.getValueAsDouble());
+    inputs.followerVelocityRadPerSec = Units.rotationsToRadians(followerVelocity.getValueAsDouble());
     inputs.followerAppliedVolts = followerAppliedVolts.getValueAsDouble();
     inputs.followerCurrentAmps = followerCurrent.getValueAsDouble();
 
-    if (inputs.followerMotorConnected && !wasFollowerConnected) {
-      followerMotor.setControl(followerRequest);
-    }
-    wasFollowerConnected = inputs.followerMotorConnected;
+    // if (inputs.followerMotorConnected && !wasFollowerConnected) {
+    // followerMotor.setControl(followerRequest);
+    // }
+    // wasFollowerConnected = inputs.followerMotorConnected;
   }
 
   @Override
@@ -248,8 +245,10 @@ public class LiftIOTalonFX implements LiftIO {
     double rotations = Units.radiansToRotations(positionRad);
     if (useMotionMagic) {
       leaderMotor.setControl(motionRequest.withPosition(rotations));
+      followerMotor.setControl(motionRequest.withPosition(rotations));
     } else {
       leaderMotor.setControl(positionRequest.withPosition(rotations));
+      followerMotor.setControl(positionRequest.withPosition(rotations));
     }
   }
 
@@ -258,21 +257,23 @@ public class LiftIOTalonFX implements LiftIO {
     if (Double.isNaN(volts)) {
       volts = 0.0;
     }
-    double clampedVolts =
-        Math.max(-LiftConstants.MAX_VOLTAGE, Math.min(LiftConstants.MAX_VOLTAGE, volts));
+    double clampedVolts = Math.max(-LiftConstants.MAX_VOLTAGE, Math.min(LiftConstants.MAX_VOLTAGE, volts));
     leaderMotor.setControl(voltageRequest.withOutput(clampedVolts));
+    followerMotor.setControl(voltageRequest.withOutput(clampedVolts));
   }
 
   @Override
   public void setCoast() {
     applyNeutralMode(NeutralModeValue.Coast);
     leaderMotor.setControl(coastRequest);
+    followerMotor.setControl(coastRequest);
   }
 
   @Override
   public void setBrake() {
     applyNeutralMode(NeutralModeValue.Brake);
     leaderMotor.setControl(neutralRequest);
+    followerMotor.setControl(neutralRequest);
   }
 
   private void applyNeutralMode(NeutralModeValue mode) {
