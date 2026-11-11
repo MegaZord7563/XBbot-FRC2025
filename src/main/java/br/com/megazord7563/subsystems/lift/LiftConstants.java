@@ -12,7 +12,8 @@ import edu.wpi.first.math.system.plant.DCMotor;
 
 /** Constants for the Lift subsystem. */
 public final class LiftConstants {
-  // The CAN bus follows the existing mechanism convention. Confirm wiring before enabling Lift.
+  // The CAN bus follows the existing mechanism convention. Confirm wiring before
+  // enabling Lift.
   public static final CANBus CAN_BUS = TunerConstants.kCANBus;
 
   public static final int LEADER_MOTOR_ID = 21;
@@ -21,7 +22,8 @@ public final class LiftConstants {
   // The follower is mechanically mirrored relative to the leader.
   public static final boolean FOLLOWER_OPPOSES_LEADER = true;
 
-  // This placeholder only allows the simulation model to be constructed; it is not a validated
+  // This placeholder only allows the simulation model to be constructed; it is
+  // not a validated
   // ratio.
   public static final double MOTOR_GEAR_RATIO = 4.5; // considering the gear ratio
 
@@ -45,8 +47,8 @@ public final class LiftConstants {
   }
 
   public static final class FeedForwardController {
-    public static final double kS = 20.0;
-    public static final double kV = 0.5;
+    public static final double kS = 0.25;
+    public static final double kV = 0.12;
     public static final double kA = 0.0;
     public static final double kG = 0.0;
 
@@ -82,9 +84,11 @@ public final class LiftConstants {
   public static final double STATOR_CURRENT_LIMIT_AMPS = 60.0;
   public static final double SUPPLY_CURRENT_LIMIT_AMPS = 40.0;
 
-  public static final double MM_CRUISE_VELOCITY_RPS = 100.0;
-  public static final double MM_ACCELERATION_RPS2 = 100.0;
-  public static final double MM_JERK_RPS3 = 4000.0;
+  public static final double MM_CRUISE_VELOCITY_RPS = 1.0; // 10 rotations per second cruise
+  public static final double MM_ACCELERATION_RPS2 =
+      1.0; //// Take approximately 5.0 seconds to reach max vel
+  public static final double MM_JERK_RPS3 =
+      10.0; //// Take approximately 0.1 seconds to reach max accel
 
   private LiftConstants() {}
 }
