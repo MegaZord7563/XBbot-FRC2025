@@ -30,8 +30,8 @@ public class XBbotMechanism3d {
   }
 
   public void log() {
-    var pose_level1 = new Pose3d(new Translation3d(0.0, 0.0, L1Height), new Rotation3d());
-    var pose_level2 = new Pose3d(new Translation3d(0.0, 0.0, L2Height), new Rotation3d());
+    var pose_level2 = new Pose3d(new Translation3d(0.0, 0.0, L1Height), new Rotation3d());
+    var pose_level1 = new Pose3d(new Translation3d(0.0, 0.0, L2Height), new Rotation3d());
     var pose_outtake = new Pose3d(new Translation3d(0.0, 0.0, L1Height), new Rotation3d());
 
     Logger.recordOutput(
